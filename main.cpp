@@ -53,11 +53,11 @@ bool PreprocessRecursive(istream& src, ostream& out, const path& file_path, cons
     int count_string = 0;
 
 
-    static regex incl1(R"/(\s*#\s*include\s*"([^"]*)"\s*)/"); // для нахождения #include "..."
-    static regex incl2(R"/(\s*#\s*include\s*<([^>]*)>\s*)/"); // для нахождения #include <...>
+    static regex include_local(R"/(\s*#\s*include\s*"([^"]*)"\s*)/"); // для нахождения #include "..."
+    static regex include_library(R"/(\s*#\s*include\s*<([^>]*)>\s*)/"); // для нахождения #include <...>
 
     //Переменная, в которой хранится результат применения регулярного выражения.
-    smatch m;
+    smatch match;
     string line;
 
     //Идем по файлу проверяя каждую строку
@@ -65,9 +65,9 @@ bool PreprocessRecursive(istream& src, ostream& out, const path& file_path, cons
         count_string++; 
 
         //ОБработка первого рекурсивного случая
-        if (regex_match(line, m, incl1)) {
+        if (regex_match(line, match, include_local)) {
             //Забираем имя файла из include, обращайсь к группе 1, 0 - будет вся строка
-            string included_file_name = m[1];
+            string included_file_name = match[1];
             
             //Передаем параметры в фунцию перебора диеркторий
             if (!FindAndProcessInclude(included_file_name, file_path, out, include_directories, count_string)) {
@@ -75,8 +75,8 @@ bool PreprocessRecursive(istream& src, ostream& out, const path& file_path, cons
             }
 
         //ОБработка второго рекурсивного случая
-        } else if (regex_match(line, m, incl2)) {
-            string included_file_name = m[1];
+        } else if (regex_match(line, match, include_library)) {
+            string included_file_name = match[1];
             if (!FindAndProcessInclude(included_file_name, file_path, out, include_directories, count_string)) {
                 return false;
             }
